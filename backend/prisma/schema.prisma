@@ -1,0 +1,123 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
+  password     String
+  nama         String
+  role         Role          @default(PASIEN)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  profilPasien ProfilPasien?
+  profilDokter ProfilDokter?
+  bookings     Booking[]     @relation("PasienBookings")
+  doctorOrders Booking[]     @relation("DokterBookings")
+  chats        Chat[]
+  transaksi    Transaksi[]
+}
+
+model ProfilPasien {
+  id           Int    @id @default(autoincrement())
+  userId       Int    @unique
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nomorTelepon String @default("")
+  alamat       String @default("")
+}
+
+model ProfilDokter {
+  id           Int    @id @default(autoincrement())
+  userId       Int    @unique
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spesialisasi String
+  jadwalHari   String
+  jadwalJam    String
+}
+
+model Booking {
+  id           Int           @id @default(autoincrement())
+  pasienId     Int
+  dokterId     Int
+  pasien       User          @relation("PasienBookings", fields: [pasienId], references: [id], onDelete: Cascade)
+  dokter       User          @relation("DokterBookings", fields: [dokterId], references: [id], onDelete: Cascade)
+  createdAt    DateTime      @default(now())
+  chats        Chat[]
+  resepDigital ResepDigital?
+}
+
+model Chat {
+  id        Int      @id @default(autoincrement())
+  bookingId Int
+  senderId  Int
+  pesan     String   @db.Text
+  createdAt DateTime @default(now())
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+model Obat {
+  id           Int           @id @default(autoincrement())
+  nama         String
+  kategori     KategoriObat
+  harga        Float
+  stok         Int
+  resepDetails ResepDetail[]
+  orderItems   OrderItem[]
+}
+
+model ResepDigital {
+  id          Int           @id @default(autoincrement())
+  bookingId   Int           @unique
+  booking     Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+  items       ResepDetail[]
+  penebusanId Int?          @unique
+  transaksi   Transaksi?    @relation(fields: [penebusanId], references: [id])
+}
+
+model ResepDetail {
+  id             Int          @id @default(autoincrement())
+  resepDigitalId Int
+  resepDigital   ResepDigital @relation(fields: [resepDigitalId], references: [id], onDelete: Cascade)
+  obatId         Int
+  obat           Obat         @relation(fields: [obatId], references: [id], onDelete: Cascade)
+  jumlah         Int
+}
+
+model Transaksi {
+  id           Int           @id @default(autoincrement())
+  pasienId     Int
+  pasien       User          @relation(fields: [pasienId], references: [id], onDelete: Cascade)
+  metodeBayar  String
+  totalHarga   Float
+  status       String        @default("PENDING")
+  createdAt    DateTime      @default(now())
+  items        OrderItem[]
+  resepDigital ResepDigital?
+}
+
+model OrderItem {
+  id          Int       @id @default(autoincrement())
+  transaksiId Int
+  transaksi   Transaksi @relation(fields: [transaksiId], references: [id], onDelete: Cascade)
+  obatId      Int
+  obat        Obat      @relation(fields: [obatId], references: [id], onDelete: Cascade)
+  jumlah      Int
+}
+
+enum Role {
+  ADMIN
+  DOKTER
+  PASIEN
+}
+
+enum KategoriObat {
+  RESEP
+  NON_RESEP
+}
