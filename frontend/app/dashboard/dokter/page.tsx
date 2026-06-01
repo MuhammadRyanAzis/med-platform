@@ -6,7 +6,8 @@ import { api } from "../../../lib/api";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { useToast } from "../../../components/ToastProvider";
-import { Pill, Plus, Edit2, Trash2, X } from "lucide-react";
+import { Pill, Plus, Edit2, Trash2, X, MessageSquare, Clock, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function DokterDashboard() {
   const { user, isLoading: authLoading } = useAuth(["DOKTER", "ADMIN"]);
@@ -14,6 +15,10 @@ export default function DokterDashboard() {
   
   const [obat, setObat] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const [activeTab, setActiveTab] = useState<"konsultasi" | "obat">("konsultasi");
+  const [bookings, setBookings] = useState<any[]>([]);
+  const router = useRouter();
   
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,8 +33,20 @@ export default function DokterDashboard() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (user) fetchObat();
+    if (user) {
+      fetchObat();
+      fetchBookings();
+    }
   }, [user]);
+
+  const fetchBookings = async () => {
+    try {
+      const res = await api.get("/transaction/bookings");
+      setBookings(res.data);
+    } catch (error) {
+      addToast("Gagal mengambil data konsultasi", "error");
+    }
+  };
 
   const fetchObat = async () => {
     try {
@@ -106,19 +123,81 @@ export default function DokterDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <div className="flex justify-between items-end mb-8">
+      <div className="flex justify-between items-end mb-6">
         <div>
           <h1 className="text-3xl font-bold text-zinc-900">Dashboard Dokter</h1>
           <p className="mt-2 text-zinc-600">Selamat datang, dr. {user?.nama}!</p>
         </div>
-        <Button onClick={openTambahModal} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Tambah Obat
-        </Button>
+        {activeTab === "obat" && (
+          <Button onClick={openTambahModal} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Tambah Obat
+          </Button>
+        )}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-        <div className="px-6 py-5 border-b border-zinc-200 bg-zinc-50">
+      <div className="flex border-b border-zinc-200 mb-6 gap-6">
+        <button
+          onClick={() => setActiveTab("konsultasi")}
+          className={`pb-3 font-medium text-sm transition-colors border-b-2 ${activeTab === "konsultasi" ? "border-teal-600 text-teal-600" : "border-transparent text-zinc-500 hover:text-zinc-700"}`}
+        >
+          <div className="flex items-center gap-2"><MessageSquare className="w-4 h-4"/> Daftar Konsultasi</div>
+        </button>
+        <button
+          onClick={() => setActiveTab("obat")}
+          className={`pb-3 font-medium text-sm transition-colors border-b-2 ${activeTab === "obat" ? "border-teal-600 text-teal-600" : "border-transparent text-zinc-500 hover:text-zinc-700"}`}
+        >
+          <div className="flex items-center gap-2"><Pill className="w-4 h-4"/> Manajemen Obat</div>
+        </button>
+      </div>
+
+      {activeTab === "konsultasi" && (
+        <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden mb-8">
+          <div className="px-6 py-5 border-b border-zinc-200 bg-zinc-50">
+            <h3 className="text-lg font-medium leading-6 text-zinc-900 flex items-center gap-2">
+              <Clock className="h-5 w-5 text-teal-600" />
+              Konsultasi Masuk
+            </h3>
+          </div>
+          
+          <div className="divide-y divide-zinc-200">
+            {bookings.length === 0 ? (
+              <div className="p-8 text-center text-zinc-500">Belum ada pasien yang mendaftar konsultasi.</div>
+            ) : (
+              bookings.map((booking) => (
+                <div key={booking.id} className="p-6 hover:bg-zinc-50 transition-colors flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                  <div className="flex items-start gap-4">
+                    <div className="h-12 w-12 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 shrink-0">
+                      <UserRound className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-bold text-zinc-900">{booking.pasien?.nama}</h4>
+                      <p className="text-sm text-zinc-500">{booking.pasien?.email}</p>
+                      <div className="flex gap-2 mt-2">
+                        <span className="text-xs bg-zinc-100 text-zinc-600 px-2 py-1 rounded-md border border-zinc-200">
+                          Booking ID: #{booking.id}
+                        </span>
+                        <span className="text-xs bg-teal-50 text-teal-700 px-2 py-1 rounded-md border border-teal-100">
+                          {new Date(booking.createdAt).toLocaleDateString('id-ID', {day: 'numeric', month:'long', year:'numeric'})}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Button onClick={() => router.push(`/konsultasi/chat/${booking.id}`)} className="bg-teal-600 hover:bg-teal-700">
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Buka Ruang Obrolan
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === "obat" && (
+        <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
+          <div className="px-6 py-5 border-b border-zinc-200 bg-zinc-50">
           <h3 className="text-lg font-medium leading-6 text-zinc-900 flex items-center gap-2">
             <Pill className="h-5 w-5 text-teal-600" />
             Manajemen Data Obat
@@ -183,6 +262,7 @@ export default function DokterDashboard() {
           </table>
         </div>
       </div>
+      )}
 
       {/* Modal CRUD */}
       {isModalOpen && (

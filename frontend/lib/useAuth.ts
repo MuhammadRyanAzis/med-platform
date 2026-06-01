@@ -25,7 +25,7 @@ export function useAuth(allowedRoles?: string[]) {
 
     setUserData(currentUser);
     setIsLoading(false);
-  }, [router, allowedRoles]);
+  }, [router, allowedRoles?.join(',')]);
 
   return { user, isLoading };
 }

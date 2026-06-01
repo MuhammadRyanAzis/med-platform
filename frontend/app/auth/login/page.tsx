@@ -42,8 +42,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-zinc-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background Ornaments */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-teal-200/30 blur-3xl"></div>
+        <div className="absolute top-1/2 right-0 w-[500px] h-[500px] rounded-full bg-blue-100/40 blur-3xl translate-x-1/3 -translate-y-1/2"></div>
+      </div>
+
+      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
         <div className="flex justify-center">
           <Activity className="h-12 w-12 text-teal-600" />
         </div>
@@ -58,8 +64,8 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+        <div className="bg-white/80 backdrop-blur-xl py-10 px-4 shadow-xl shadow-teal-900/5 border border-white/60 sm:rounded-3xl sm:px-12">
           <form className="space-y-6" onSubmit={handleLogin}>
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
@@ -67,7 +73,7 @@ export default function LoginPage() {
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-zinc-700">Email address</label>
+              <label className="block text-sm font-semibold text-zinc-700 mb-1.5">Email address</label>
               <div className="mt-1">
                 <Input
                   type="email"
@@ -80,7 +86,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-700">Password</label>
+              <label className="block text-sm font-semibold text-zinc-700 mb-1.5">Password</label>
               <div className="mt-1">
                 <Input
                   type="password"
